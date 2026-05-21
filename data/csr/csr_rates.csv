@@ -1,0 +1,83 @@
+item_code,description,unit,rate_inr
+EXC-SOFT,Earthwork excavation in ordinary or soft sandy soil for foundations including lifting up to 1.5m and disposal as per IS 875 loading limits,cum,195.50
+EXC-HARD,Earthwork excavation in hard soil or dense gravel mix requiring heavy manual picking or pneumatic breaking for subterranean layouts,cum,310.20
+EXC-ROCK,Earthwork excavation in hard rock formations requiring controlled chiseling or mechanical splitting (excluding blasting operations),cum,825.00
+BACKFILL-SOIL,Banking or backfilling excavated earth in layers not exceeding 20cm including watering consolidation and ramming under floors,cum,120.00
+PROT-ANTITERM,Diluting and injecting chemical emulsion for pre-construction anti-termite treatment in foundation trenches and plinth sub-grade,sqm,145.00
+CEM-OPC43,Supplying and mixing Ordinary Portland Cement OPC Grade 43 conforming to IS 8112 for structural mortar and concrete matrix,kg,8.50
+CEM-OPC53,Supplying and mixing Ordinary Portland Cement OPC Grade 53 conforming to IS 12269 for high-strength reinforced concrete elements,kg,9.20
+CEM-PPC,Supplying and mixing Portland Pozzolana Cement PPC conforming to IS 1489 for durable foundation structures and mass concrete,kg,8.00
+ADMIX-PLAST,Supplying and infusing liquid chemical superplasticizer admixtures conforming to IS 9103 to achieve high slump concrete workability,kg,85.00
+WATERPROOF-LIQ,Supplying and mixing integral liquid waterproofing compound conforming to IS 2645 into concrete or mortar mix design,kg,115.00
+CURING-COMP,Applying specialized acrylic-based liquid curing compound over freshly cast structural concrete surfaces to prevent water loss,sqm,45.00
+CONC-M10,Providing and laying plain cement concrete PCC M-10 grade leveling course below structural footings as per design mix guidelines,cum,4250.00
+CONC-M15,Providing and laying plain cement concrete PCC M-15 grade for structural mud-mats and general pavement bases,cum,4680.00
+CONC-M20,Providing and laying design mix reinforced cement concrete RCC M-20 grade for minor non-load bearing structural components,cum,5400.00
+CONC-M25,Providing and laying design mix reinforced cement concrete RCC M-25 grade for standard beams suspended structural slabs and footings,cum,6150.00
+CONC-M30,Providing and laying design mix reinforced cement concrete RCC M-30 grade for medium vertical structural columns and retaining arrays,cum,6680.00
+CONC-M35,Providing and laying design mix high-strength RCC M-35 grade for heavy structural frames subjected to severe environmental exposures,cum,7120.00
+CONC-M40,Providing and laying design mix high-strength RCC M-40 grade for specialized infrastructure frames and columns under IS 456,cum,7650.00
+CONC-M45,Providing and laying design mix high-strength RCC M-45 grade for heavily loaded structural structures under extreme exposure conditions,cum,8100.00
+CONC-M50,Providing and laying design mix high-performance concrete M-50 grade for severe industrial structures and heavy civil infrastructure,cum,8550.00
+FRM-FOUND,Centering and shuttering including strutting propping and removal of formwork for subterranean foundations and raft edges,sqm,320.00
+FRM-COL-RECT,Centering and shuttering including bracing and scaffolding for vertical rectangular or square columns to withstand liquid pressures,sqm,580.00
+FRM-COL-CIRC,Centering and shuttering using fabricated circular steel forms for circular concrete columns including continuous bracing,sqm,690.00
+FRM-BEAM,Centering and shuttering including propping up to 3.5m height for suspended horizontal structural beams and lintels,sqm,460.00
+FRM-SLAB,Centering and shuttering including steel/plywood lining and continuous propping for suspended horizontal structural slabs,sqm,410.00
+FRM-WALL,Centering and shuttering including double-tier bracing for vertical concrete shear walls and lift core shafts,sqm,620.00
+FRM-STAIR,Centering and shuttering including raking and cutting for concrete staircases waist slabs steps and associated landings,sqm,540.00
+REINF-FE250,Providing and placing plain mild steel reinforcement Fe 250 bars including cutting bending binding and structural positioning,kg,64.20
+REINF-FE415,Providing and placing High Yield Strength Deformed HYSD Fe 415 steel reinforcement bars for conventional concrete structures,kg,67.50
+REINF-FE500,Providing and placing High Yield Strength Deformed HYSD Fe 500 steel reinforcement bars for structural elements,kg,71.00
+REINF-FE500D,Providing and placing high-ductility TMT Fe 500D steel reinforcement bars optimized for seismic zones under IS 13920 detailing,kg,73.50
+REINF-FE550,Providing and placing ultra-high-strength thermo-mechanically treated TMT Fe 550 steel reinforcement bars for heavy designs,kg,76.00
+REINF-FE550D,Providing and placing thermo-mechanically treated high-ductility Fe 550D steel bars for critical seismic resisting frames,kg,78.50
+REINF-FE600,Providing and placing structural-grade high-strength TMT Fe 600 steel reinforcement bars for infrastructural foundations,kg,79.80
+SEIS-COUPLER-20,Supplying and fixing parallel threaded mechanical couplers for structural splicing of 20mm reinforcement bars under IS 13920,each,180.00
+SEIS-COUPLER-25,Supplying and fixing parallel threaded mechanical couplers for structural splicing of 25mm reinforcement bars under IS 13920,each,240.00
+SEIS-COUPLER-32,Supplying and fixing parallel threaded mechanical couplers for structural splicing of 32mm reinforcement bars under IS 13920,each,350.00
+SEIS-WELD-SPLICE,Execution of certified structural lap welding splices for high-ductility reinforcement steel reinforcement on-site,each,120.00
+PSC-M45,Providing and laying design mix concrete M-45 grade for prestressed pre-cast concrete beams and components under IS 1343,cum,7950.00
+PSC-M50,Providing and laying high-performance design mix concrete M-50 grade for prestressed concrete elements as per IS 1343,cum,8450.00
+PSC-M55,Providing and laying high-performance concrete M-55 grade for specialized pre-tensioned structural applications,cum,8900.00
+PSC-M60,Providing and laying ultra-high-performance design mix concrete M-60 grade for long-span post-tensioned bridge girders,cum,9320.00
+PSC-STRAND-127,Supplying un-coated stress-relieved low-relaxation seven-wire 12.7mm HTS strands for post-tensioning operations under IS 14268,kg,138.50
+PSC-WIRE-HTS,Supplying high tensile steel HTS plain wires for pre-tensioned concrete elements including structural placement,kg,145.00
+PSC-ANCHOR-POST,Providing and fixing dynamic anchorage assemblies complete with wedges and bearing plates for post-tensioned cable sets,each,2450.00
+PSC-ANCHOR-PRE,Providing and fixing specialized end anchorages for pre-tensioned wires including casting integration elements,each,1150.00
+PSC-DUCT-GI,Providing and fixing corrugated galvanized iron GI sheathing ducts for post-tensioned internal reinforcement lines,meter,145.00
+PSC-DUCT-HDPE,Providing and fixing corrugated high-density polyethylene HDPE sheathing ducts for aggressive corrosive environments,meter,195.00
+PSC-GROUT-NONSHRINK,Injecting specialized non-shrink cementitious grout mix into post-tensioned sheathing ducts using pressure pumps,cum,12500.00
+ST-ROLLED-BEAM,Supplying fabricating and erecting structural steel rolled I-beams joists for structural frame assemblies under IS 800,kg,88.50
+ST-ROLLED-CHAN,Supplying fabricating and erecting structural steel rolled channel sections ISMC for purlins framing and bracings,kg,86.20
+ST-ROLLED-ANG,Supplying fabricating and erecting structural steel rolled angle sections ISA for roof trusses connections and ties,kg,84.50
+ST-HOLLOW-SQ,Supplying and fabricating hollow square structural steel sections SHS for columns and architectural space frames,kg,94.00
+ST-HOLLOW-CIRC,Supplying and fabricating hollow circular structural steel sections CHS for structural trusses and columns,kg,92.50
+ST-BUILTUP-GIRD,Fabricating and erecting custom built-up structural plate girders and heavy portal columns as per IS 800 standards,kg,96.20
+ST-PLATE-GUSSET,Supplying and fixing structural steel gusset plates base plates and stiffeners including profile cutting and dressing,kg,84.00
+ST-BOLT-BLACK,Supplying and fixing ordinary black steel bolts nuts and washers precision turned for minor secondary framing connections,kg,110.00
+ST-BOLT-HSFG,Supplying and tightening High-Strength Friction Grip HSFG torque-controlled bolts for heavy structural steel joints,each,165.00
+ST-WELD-FILLET,Execution of continuous structural fillet welding lines using certified low-hydrogen electrodes on structural frames,meter,210.00
+ST-WELD-BUTT,Execution of full-penetration structural butt welding joints including edge preparation radiograph testing checks,meter,380.00
+ST-PRIMER-ZINC,Applying a protective coat of zinc chromate or red oxide primer over sand-blasted structural steel surfaces,sqm,42.00
+ST-PAINT-ENAMEL,Applying two coats of synthetic enamel finish paint of approved brand and manufacture over structural steel work,sqm,68.00
+ST-FIRE-COAT,Applying specialized intumescent fire-retardant coating over structural steel sections to achieve a 2-hour fire rating,sqm,450.00
+MAS-CLAY-BRK,Constructing conventional structural masonry using kiln-burnt clay bricks of class designation 7.5 in cement mortar 1:6,cum,5200.00
+MAS-FLYASH-BRK,Constructing structural load-bearing masonry walls using high-strength fly-ash cement bricks in cement mortar mix 1:4,cum,4850.00
+MAS-AAC-BLOCK,Constructing lightweight structural partition walls using autoclaved aerated concrete AAC blocks in cement adhesive mortar,cum,4400.00
+MAS-STONE-RUBBLE,Constructing heavy random rubble stone masonry for gravity retaining walls and substructure abutments in mortar 1:6,cum,3650.00
+MAS-STONE-ASHLAR,Constructing premium finely dressed ashlar stone masonry for heavy structural architectural piers and structural facings,cum,6800.00
+PLAS-INT-12,Applying 12mm thick cement plaster inner finish mix 1:4 over brick or concrete walls to satisfy IS 875 unit dead weight limits,sqm,165.00
+PLAS-EXT-18,Applying 18mm thick cement plaster outer finish mix 1:5 including matching groove layouts and scaffolding arrangements,sqm,245.00
+FLOOR-VITRIFIED,Providing and laying premium vitrified floor tiles matching approved patterns over a baseline 20mm thick cement mortar bed,sqm,850.00
+FLOOR-GRANITE,Providing and laying polished structural granite stone slabs over floors steps skirting including machine edge molding,sqm,1650.00
+FLOOR-MARBLE,Providing and laying polished Indian white marble stone flooring including diamond grinding mirror polishing on-site,sqm,1450.00
+FLOOR-KOTA,Providing and laying fine polished green Kota stone flooring over structural slabs including fine joint dressing work,sqm,620.00
+WALL-TILE,Providing and fixing glazed ceramic wall tiles up to specified heights using high-bonding specialized structural adhesive polymers,sqm,580.00
+ROOF-GI-CORR,Supplying and fixing corrugated galvanized iron GI roofing sheets over structural trusses using wind-resistant J-bolts,sqm,420.00
+ROOF-GALVALUME,Supplying and fixing pre-painted Galvalume profile roofing sheets including overlapping seals for industrial wind loads,sqm,560.00
+ROOF-POLYCARB,Supplying and fixing multi-wall polycarbonate translucent roofing sheets including aluminum profile framing fixtures,sqm,1150.00
+CLAD-FASTENER,Supplying and drilling high-strength wind-resistant self-tapping structural cladding fasteners with EPDM washers,each,18.00
+ST-PURLIN-Z,Supplying and fixing cold-formed light-gauge high-tensile structural Z-purlins for roof truss systems under wind loads,kg,91.00
+ST-PURLIN-C,Supplying and fixing cold-formed light-gauge high-tensile structural C-purlins for side wall girts and structural frames,kg,89.50
+FACADE-GLASS,Supplying and erecting structural glass glazing panels featuring toughened safety glass and spider fitting anchors,sqm,4800.00

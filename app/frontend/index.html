@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civil Engineering AI Co-Pilot</title>
+    <script src="https://res.cdn.office.net/teams-js/2.19.0/js/MicrosoftTeams.min.js" integrity="sha384-Uo8vYpCsc16w8n6K9jD3ZqGvE4fG9R1R4Zp7J3m5U6P8G6O4D3F3q2W8mG7F5T2J" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --teams-purple: #6264A7;
+            --teams-bg: #F5F5F5;
+            --card-bg: #FFFFFF;
+            --text-main: #242424;
+            --text-sub: #616161;
+            --border-color: #E0E0E0;
+        }
+
+        /* Support Teams Dark Mode dynamically via variable swaps */
+        body.theme-dark {
+            --teams-bg: #201F1F;
+            --card-bg: #2D2C2C;
+            --text-main: #F5F5F5;
+            --text-sub: #ADADAD;
+            --border-color: #484646;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--teams-bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 24px;
+        }
+
+        .header-block {
+            border-bottom: 2px solid var(--teams-purple);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+
+        .header-block h1 {
+            margin: 0;
+            font-size: 22px;
+            color: var(--teams-purple);
+        }
+        
+        .header-block p {
+            margin: 4px 0 0 0;
+            font-size: 13px;
+            color: var(--text-sub);
+        }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--teams-bg);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        textarea:focus {
+            outline: 2px solid var(--teams-purple);
+        }
+
+        .btn-submit {
+            background-color: var(--teams-purple);
+            color: white;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            align-self: flex-end;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background-color: #4F518C;
+        }
+
+        .btn-submit:disabled {
+            background-color: var(--border-color);
+            cursor: not-allowed;
+        }
+
+        .output-card {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            background-color: var(--teams-bg);
+            min-height: 120px;
+            white-space: pre-wrap; /* Keeps formatting neat */
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .meta-info {
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--text-sub);
+            display: flex;
+            gap: 16px;
+        }
+
+        .tag-intent {
+            background: var(--teams-purple);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header-block">
+        <h1>🏗️ Civil AI Design Co-Pilot Workspace</h1>
+        <p>Run hybrid compliance auditing, semantic BOQ cost extractions, and draft architectural RFIs inline.</p>
+    </div>
+
+    <div class="workspace-grid">
+        <div class="input-group">
+            <label for="queryInput">Enter Engineering Prompt or Calculation Parameters:</label>
+            <textarea id="queryInput" placeholder="e.g., Give me an estimate for 120 cum of CONC-M25 concrete beams... or Check if 150mm spacing violates IS 456..."></textarea>
+            <button class="btn-submit" id="submitBtn" onclick="submitEngineeringTask()">Execute Agent Workflow</button>
+        </div>
+
+        <div class="input-group">
+            <label>Agent Analysis Response:</label>
+            <div class="output-card" id="outputDisplay">Await instructions. Type an engineering query above to engage tool pipelines...</div>
+            <div class="meta-info" id="metaDisplay" style="display: none;">
+                <span>Route Strategy: <span class="tag-intent" id="intentTag">NONE</span></span>
+                <span id="citationCount">Citations: 0</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize the Teams Client SDK Context
+    try {
+        microsoftTeams.app.initialize().then(() => {
+            console.log("Teams Framework Initialized successfully.");
+            // Match current Teams visual skin context (Dark, High Contrast, Default)
+            microsoftTeams.app.getContext().then((context) => {
+                if(context.app.theme === "dark") {
+                    document.body.classList.add("theme-dark");
+                }
+            });
+        });
+    } catch (e) {
+        console.warn("Running standard browser runtime outside a live Teams client framework envelope.");
+    }
+
+    async function submitEngineeringTask() {
+        const queryText = document.getElementById("queryInput").value.trim();
+        const outputDisplay = document.getElementById("outputDisplay");
+        const metaDisplay = document.getElementById("metaDisplay");
+        const intentTag = document.getElementById("intentTag");
+        const citationCount = document.getElementById("citationCount");
+        const submitBtn = document.getElementById("submitBtn");
+
+        if (!queryText) return;
+
+        // Visual loading state updates
+        submitBtn.disabled = true;
+        outputDisplay.innerText = "⏳ Orchestrating structural pipelines, matching parameters, extracting items...";
+        metaDisplay.style.display = "none";
+
+        try {
+            // Pointing to our local FastAPI microservice engine endpoint
+            const targetUrl = "http://127.0.0.1:8000/api/invoke";
+            
+            const response = await fetch(targetUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer mock-dev-token" // Passes local bypass checks securely
+                },
+                body: JSON.stringify({ query: queryText })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                outputDisplay.innerText = data.response;
+                intentTag.innerText = data.intent_routed;
+                citationCount.innerText = `Citations Provided: ${data.citations ? data.citations.length : 0}`;
+                metaDisplay.style.display = "flex";
+            } else {
+                outputDisplay.innerText = `❌ App Execution Boundary Issue: ${data.detail || 'Processing Error'}`;
+            }
+
+        } catch (error) {
+            outputDisplay.innerText = `❌ Connection Error: Cannot communicate with the backend microservice. Verify Uvicorn is running on port 8000.\nDetails: ${error.message}`;
+        } finally {
+            submitBtn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
