@@ -320,6 +320,33 @@
         }
 
         .status-dot.offline { background: var(--error); }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 640px) {
+            .settings-grid { grid-template-columns: 1fr; }
+        }
+
+        .settings-grid label {
+            display: block;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .settings-grid input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.88rem;
+            background: var(--surface);
+            color: var(--text);
+        }
     </style>
 </head>
 <body>
@@ -342,6 +369,23 @@
         <div class="cap-card">
             <strong>RFI drafts</strong>
             <span>Formal site discrepancy letters</span>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header"><span>Connection</span></div>
+        <div class="panel-body">
+            <div class="settings-grid">
+                <div>
+                    <label for="apiBaseInput">API base URL</label>
+                    <input type="url" id="apiBaseInput" value="http://127.0.0.1:8000" autocomplete="off">
+                </div>
+                <div>
+                    <label for="apiKeyInput">API key (matches API_SECRET_KEY in server .env)</label>
+                    <input type="password" id="apiKeyInput" placeholder="Leave empty if DEBUG_SKIP_AUTH=true" autocomplete="off">
+                </div>
+            </div>
+            <p class="hint" style="margin:10px 0 0">Unauthenticated requests receive HTTP 401 unless debug bypass is enabled on the server.</p>
         </div>
     </div>
 
@@ -381,7 +425,29 @@
 </div>
 
 <script>
-    const API_BASE = "http://127.0.0.1:8000";
+    const DEFAULT_API_BASE = "http://127.0.0.1:8000";
+    const STORAGE_BASE = "civilCopilotApiBase";
+    const STORAGE_KEY = "civilCopilotApiKey";
+
+    const apiBaseInput = document.getElementById("apiBaseInput");
+    const apiKeyInput = document.getElementById("apiKeyInput");
+
+    function getApiBase() {
+        return (apiBaseInput.value || DEFAULT_API_BASE).replace(/\/$/, "");
+    }
+
+    function getAuthHeaders() {
+        const headers = { "Content-Type": "application/json" };
+        const key = apiKeyInput.value.trim();
+        headers.Authorization = "Bearer " + (key || "mock-dev-token");
+        return headers;
+    }
+
+    apiBaseInput.value = sessionStorage.getItem(STORAGE_BASE) || DEFAULT_API_BASE;
+    apiKeyInput.value = sessionStorage.getItem(STORAGE_KEY) || "";
+    apiBaseInput.addEventListener("change", () => sessionStorage.setItem(STORAGE_BASE, getApiBase()));
+    apiKeyInput.addEventListener("change", () => sessionStorage.setItem(STORAGE_KEY, apiKeyInput.value));
+
     const EXAMPLES = [
         { label: "Slenderness (IS 800)", query: "What is the maximum slenderness ratio for a tension member under IS 800?" },
         { label: "Fe500 reinforcement", query: "Can Fe500 grade steel be used for reinforcement in structural concrete per IS 456?" },
@@ -474,7 +540,7 @@
 
     async function checkBackend() {
         try {
-            const res = await fetch(`${API_BASE}/api/health`, { method: "GET" });
+            const res = await fetch(`${getApiBase()}/api/health`, { method: "GET" });
             if (res.ok) {
                 statusDot.classList.remove("offline");
                 backendStatus.textContent = "Backend online";
@@ -504,12 +570,9 @@
         citationsList.innerHTML = "";
 
         try {
-            const response = await fetch(`${API_BASE}/api/invoke`, {
+            const response = await fetch(`${getApiBase()}/api/invoke`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer mock-dev-token",
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ query: queryText }),
             });
 
@@ -567,7 +630,7 @@
                 outputDisplay.innerHTML = `<div class="error-banner">${escapeHtml(data.detail || "Processing error")}</div>`;
             }
         } catch (error) {
-            outputDisplay.innerHTML = `<div class="error-banner">Cannot reach the API at ${escapeHtml(API_BASE)}. Ensure Uvicorn is running and DEBUG_SKIP_AUTH=true in .env.<br><br>${escapeHtml(error.message)}</div>`;
+            outputDisplay.innerHTML = `<div class="error-banner">Cannot reach the API at ${escapeHtml(getApiBase())}. Start Uvicorn, set API_SECRET_KEY (or DEBUG_SKIP_AUTH for local dev), and enter the matching API key above.<br><br>${escapeHtml(error.message)}</div>`;
             statusDot.classList.add("offline");
             backendStatus.textContent = "Backend offline";
         } finally {

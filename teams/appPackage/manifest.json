@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "civil-ai-copilot-local",
+  "packageName": "com.civil.copilot.local",
+  "developer": {
+    "name": "Civil AI Co-Pilot",
+    "websiteUrl": "https://localhost",
+    "privacyUrl": "https://localhost/privacy",
+    "termsOfUseUrl": "https://localhost/terms"
+  },
+  "name": {
+    "short": "Civil Co-Pilot",
+    "full": "Civil Engineering AI Co-Pilot"
+  },
+  "description": {
+    "short": "IS code compliance, BOQ costing, and RFI drafting.",
+    "full": "Structural engineering assistant with local RAG over Indian Standards, CSR-based cost estimates, and RFI generation."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#4F46E5",
+  "staticTabs": [
+    {
+      "entityId": "copilot-chat",
+      "name": "Co-Pilot",
+      "contentUrl": "https://YOUR_HOSTED_URL/app/frontend/index.html",
+      "websiteUrl": "https://YOUR_HOSTED_URL/app/frontend/index.html",
+      "scopes": ["personal"]
+    }
+  ],
+  "validDomains": ["YOUR_HOSTED_URL", "127.0.0.1", "localhost"]
+}
