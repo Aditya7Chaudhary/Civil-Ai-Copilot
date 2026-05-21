@@ -24,6 +24,7 @@ class AgentState(TypedDict):
     final_output: str
     citations: List[str]
     sources: List[str]
+    compliance_status: str  # set only on COMPLIANCE route
 
 # Initialize Shared System LLM Interface
 shared_llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.0)
@@ -83,11 +84,20 @@ def compliance_execution_node(state: AgentState) -> Dict[str, Any]:
     # Execute the RAG lookup and analysis
     assessment = engine.evaluate_compliance(query_text)
 
-    # Ensure these keys EXACTLY match the fields defined in your AgentState schema
+    status = assessment.get("compliance_status", "UNKNOWN")
+    answer = assessment.get("answer", "")
+
+    status_prefix = {
+        "COMPLIANT_DETERMINED": "Assessment based on retrieved IS code clauses.\n\n",
+        "INSUFFICIENT_DATA": "Insufficient evidence in retrieved clauses to verify compliance.\n\n",
+        "UNKNOWN": "No matching clauses were retrieved from the standards library.\n\n",
+    }.get(status, "")
+
     return {
-        "final_output": assessment.get("compliance_report", ""),
-        "citations": assessment.get("citations", []),
-        "sources": assessment.get("sources", [])
+        "final_output": status_prefix + answer,
+        "citations": assessment.get("applied_citations", []),
+        "sources": assessment.get("source_documents", []),
+        "compliance_status": status,
     }
 
 # ==========================================

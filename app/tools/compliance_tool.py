@@ -3,7 +3,8 @@ import logging
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
-from app.tools.retrieval_tool import EngineeringRetriever
+from app.tools.retrieval_tool import get_engineering_retriever
+from app.tools.chunking import detect_standards_from_query
 
 # Load environment variables from .env file explicitly
 load_dotenv()
@@ -13,7 +14,7 @@ logger = logging.getLogger("ComplianceEngine")
 
 class ComplianceEngine:
     def __init__(self):
-        self.retriever = EngineeringRetriever()
+        self.retriever = get_engineering_retriever()
         
         # Verify API Key existence before boot
         if not os.getenv("GROQ_API_KEY"):
@@ -59,7 +60,9 @@ class ComplianceEngine:
     def evaluate_compliance(self, query: str) -> dict:
         """Retrieves verified clause blocks and runs them through the strict verification prompt."""
         # 1. Execute Modulated Structural Query Search
-        evidence = self.retriever.retrieve_evidence(query, k=4)
+        target_standards = detect_standards_from_query(query)
+        retrieve_k = min(16, 10 + 3 * len(target_standards))
+        evidence = self.retriever.retrieve_evidence(query, k=retrieve_k)
         
         # Short-circuit immediately if the retriever returns zero matches
         if not evidence["retrieved_clauses"]:
@@ -82,9 +85,12 @@ class ComplianceEngine:
         answer_text = response.content
         
         # 4. Determine Compliance Verdict Status
-        status = "COMPLIANT_DETERMINED"
-        if "insufficient evidence" in answer_text.lower():
+        answer_lower = answer_text.lower()
+        no_evidence_phrase = "could not find sufficient evidence"
+        if no_evidence_phrase in answer_lower:
             status = "INSUFFICIENT_DATA"
+        else:
+            status = "COMPLIANT_DETERMINED"
             
         return {
             "compliance_status": status,

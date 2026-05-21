@@ -4,236 +4,590 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Civil Engineering AI Co-Pilot</title>
-    <script src="https://res.cdn.office.net/teams-js/2.19.0/js/MicrosoftTeams.min.js" integrity="sha384-Uo8vYpCsc16w8n6K9jD3ZqGvE4fG9R1R4Zp7J3m5U6P8G6O4D3F3q2W8mG7F5T2J" crossorigin="anonymous"></script>
+    <script src="https://res.cdn.office.net/teams-js/2.19.0/js/MicrosoftTeams.min.js" crossorigin="anonymous"></script>
     <style>
         :root {
-            --teams-purple: #6264A7;
-            --teams-bg: #F5F5F5;
-            --card-bg: #FFFFFF;
-            --text-main: #242424;
-            --text-sub: #616161;
-            --border-color: #E0E0E0;
+            --accent: #4f46e5;
+            --accent-hover: #4338ca;
+            --accent-soft: #eef2ff;
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --surface-elevated: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #059669;
+            --warning: #d97706;
+            --error: #dc2626;
+            --radius: 12px;
+            --shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
         }
 
-        /* Support Teams Dark Mode dynamically via variable swaps */
         body.theme-dark {
-            --teams-bg: #201F1F;
-            --card-bg: #2D2C2C;
-            --text-main: #F5F5F5;
-            --text-sub: #ADADAD;
-            --border-color: #484646;
+            --accent: #818cf8;
+            --accent-hover: #a5b4fc;
+            --accent-soft: #1e1b4b;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-elevated: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
         }
+
+        * { box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--teams-bg);
-            color: var(--text-main);
+            font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
+            min-height: 100vh;
+            line-height: 1.55;
         }
 
-        .app-container {
-            width: 100%;
-            max-width: 900px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            padding: 24px;
+        .page {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 24px 20px 48px;
         }
 
-        .header-block {
-            border-bottom: 2px solid var(--teams-purple);
-            padding-bottom: 16px;
+        .hero {
+            margin-bottom: 28px;
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: 1.65rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .hero p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            max-width: 640px;
+        }
+
+        .capabilities {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
             margin-bottom: 24px;
         }
 
-        .header-block h1 {
-            margin: 0;
-            font-size: 22px;
-            color: var(--teams-purple);
-        }
-        
-        .header-block p {
-            margin: 4px 0 0 0;
-            font-size: 13px;
-            color: var(--text-sub);
+        .cap-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            box-shadow: var(--shadow);
         }
 
-        .workspace-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
+        .cap-card strong {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
         }
 
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+        .cap-card span {
+            font-size: 0.78rem;
+            color: var(--text-muted);
         }
 
-        label {
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
             font-weight: 600;
-            font-size: 14px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .panel-body { padding: 18px; }
+
+        .examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .example-chip {
+            background: var(--accent-soft);
+            color: var(--accent);
+            border: 1px solid transparent;
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .example-chip:hover {
+            border-color: var(--accent);
+        }
+
+        body.theme-dark .example-chip {
+            color: var(--accent-hover);
         }
 
         textarea {
             width: 100%;
-            height: 100px;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background: var(--teams-bg);
-            color: var(--text-main);
+            min-height: 110px;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
             font-family: inherit;
-            font-size: 14px;
+            font-size: 0.95rem;
             resize: vertical;
-            box-sizing: border-box;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
 
         textarea:focus {
-            outline: 2px solid var(--teams-purple);
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
         }
 
-        .btn-submit {
-            background-color: var(--teams-purple);
-            color: white;
-            color: white;
+        .input-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
             border: none;
-            padding: 12px 24px;
-            font-size: 14px;
+            padding: 10px 22px;
+            font-size: 0.9rem;
             font-weight: 600;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
-            align-self: flex-end;
-            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.15s;
         }
 
-        .btn-submit:hover {
-            background-color: #4F518C;
-        }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
 
-        .btn-submit:disabled {
-            background-color: var(--border-color);
+        .btn-primary:disabled {
+            opacity: 0.55;
             cursor: not-allowed;
         }
 
-        .output-card {
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 16px;
-            background-color: var(--teams-bg);
-            min-height: 120px;
-            white-space: pre-wrap; /* Keeps formatting neat */
-            font-size: 14px;
-            line-height: 1.5;
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: none;
         }
 
-        .meta-info {
-            margin-top: 12px;
-            font-size: 12px;
-            color: var(--text-sub);
+        .btn-primary.loading .spinner { display: inline-block; }
+        .btn-primary.loading .btn-label { opacity: 0.85; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .response-panel { margin-top: 20px; }
+
+        .meta-bar {
             display: flex;
-            gap: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+            align-items: center;
         }
 
-        .tag-intent {
-            background: var(--teams-purple);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-weight: bold;
+        .badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 4px 10px;
+            border-radius: 999px;
         }
+
+        .badge-intent { background: var(--accent-soft); color: var(--accent); }
+        .badge-compliance { background: #d1fae5; color: #047857; }
+        .badge-insufficient { background: #fef3c7; color: #b45309; }
+        .badge-unknown { background: #fee2e2; color: #b91c1c; }
+
+        body.theme-dark .badge-compliance { background: #064e3b; color: #6ee7b7; }
+        body.theme-dark .badge-insufficient { background: #78350f; color: #fcd34d; }
+        body.theme-dark .badge-unknown { background: #7f1d1d; color: #fca5a5; }
+
+        .output-content {
+            min-height: 140px;
+            font-size: 0.92rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .output-content.empty {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .output-content strong { font-weight: 700; color: var(--text); }
+
+        .sources-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 14px;
+        }
+
+        .source-pill {
+            font-size: 0.72rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 999px;
+            color: var(--text-muted);
+        }
+
+        .citations-block {
+            margin-top: 16px;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+        }
+
+        .citations-block summary {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            user-select: none;
+        }
+
+        .citations-list {
+            margin: 10px 0 0;
+            padding-left: 20px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .citations-list li { margin-bottom: 6px; }
+
+        .error-banner {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: var(--error);
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+        }
+
+        body.theme-dark .error-banner {
+            background: #450a0a;
+            border-color: #7f1d1d;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .status-dot.offline { background: var(--error); }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="header-block">
-        <h1>🏗️ Civil AI Design Co-Pilot Workspace</h1>
-        <p>Run hybrid compliance auditing, semantic BOQ cost extractions, and draft architectural RFIs inline.</p>
+<div class="page">
+    <header class="hero">
+        <h1>Civil AI Design Co-Pilot</h1>
+        <p>Verify designs against Indian Standard codes, estimate BOQ costs from CSR rates, and draft construction RFIs — powered by hybrid RAG over your ingested standards library.</p>
+    </header>
+
+    <div class="capabilities">
+        <div class="cap-card">
+            <strong>Compliance</strong>
+            <span>IS 456, IS 800, IS 875, IS 1343, IS 13920</span>
+        </div>
+        <div class="cap-card">
+            <strong>Cost estimate</strong>
+            <span>CSR 2024 line-item pricing</span>
+        </div>
+        <div class="cap-card">
+            <strong>RFI drafts</strong>
+            <span>Formal site discrepancy letters</span>
+        </div>
     </div>
 
-    <div class="workspace-grid">
-        <div class="input-group">
-            <label for="queryInput">Enter Engineering Prompt or Calculation Parameters:</label>
-            <textarea id="queryInput" placeholder="e.g., Give me an estimate for 120 cum of CONC-M25 concrete beams... or Check if 150mm spacing violates IS 456..."></textarea>
-            <button class="btn-submit" id="submitBtn" onclick="submitEngineeringTask()">Execute Agent Workflow</button>
+    <div class="panel">
+        <div class="panel-header">
+            <span>Engineering query</span>
+            <span class="hint"><span class="status-dot" id="statusDot"></span><span id="backendStatus">Checking backend…</span></span>
         </div>
-
-        <div class="input-group">
-            <label>Agent Analysis Response:</label>
-            <div class="output-card" id="outputDisplay">Await instructions. Type an engineering query above to engage tool pipelines...</div>
-            <div class="meta-info" id="metaDisplay" style="display: none;">
-                <span>Route Strategy: <span class="tag-intent" id="intentTag">NONE</span></span>
-                <span id="citationCount">Citations: 0</span>
+        <div class="panel-body">
+            <div class="examples" id="exampleChips"></div>
+            <textarea id="queryInput" placeholder="Describe your structural question, BOQ items, or site issue…" aria-label="Engineering query"></textarea>
+            <div class="input-footer">
+                <span class="hint" id="charHint">Ctrl+Enter to run · 0 characters</span>
+                <button class="btn-primary" id="submitBtn" type="button">
+                    <span class="spinner" aria-hidden="true"></span>
+                    <span class="btn-label">Run analysis</span>
+                </button>
             </div>
+        </div>
+    </div>
+
+    <div class="panel response-panel">
+        <div class="panel-header">Response</div>
+        <div class="panel-body">
+            <div class="meta-bar" id="metaBar" hidden>
+                <span class="badge badge-intent" id="intentBadge">—</span>
+                <span class="badge" id="complianceBadge" hidden></span>
+            </div>
+            <div class="output-content empty" id="outputDisplay">Ask a question above to start. Try an example prompt for compliance, cost, or RFI workflows.</div>
+            <div class="sources-row" id="sourcesRow" hidden></div>
+            <details class="citations-block" id="citationsBlock" hidden>
+                <summary id="citationsSummary">Clause citations (0)</summary>
+                <ol class="citations-list" id="citationsList"></ol>
+            </details>
         </div>
     </div>
 </div>
 
 <script>
-    // Initialize the Teams Client SDK Context
-    try {
-        microsoftTeams.app.initialize().then(() => {
-            console.log("Teams Framework Initialized successfully.");
-            // Match current Teams visual skin context (Dark, High Contrast, Default)
-            microsoftTeams.app.getContext().then((context) => {
-                if(context.app.theme === "dark") {
-                    document.body.classList.add("theme-dark");
-                }
-            });
+    const API_BASE = "http://127.0.0.1:8000";
+    const EXAMPLES = [
+        { label: "Slenderness (IS 800)", query: "What is the maximum slenderness ratio for a tension member under IS 800?" },
+        { label: "Fe500 reinforcement", query: "Can Fe500 grade steel be used for reinforcement in structural concrete per IS 456?" },
+        { label: "Slab cover", query: "What is the minimum cover for reinforcement in slabs per IS 456?" },
+        { label: "BOQ estimate", query: "Estimate cost for 150 cum CONC-M25, 450 sqm FRM-SLAB, and 6200 kg REINF-FE500D." },
+        { label: "Draft RFI", query: "Draft an RFI: beam core strength only 19 MPa at 28 days, violating IS 456." },
+    ];
+
+    const queryInput = document.getElementById("queryInput");
+    const outputDisplay = document.getElementById("outputDisplay");
+    const submitBtn = document.getElementById("submitBtn");
+    const metaBar = document.getElementById("metaBar");
+    const intentBadge = document.getElementById("intentBadge");
+    const complianceBadge = document.getElementById("complianceBadge");
+    const sourcesRow = document.getElementById("sourcesRow");
+    const citationsBlock = document.getElementById("citationsBlock");
+    const citationsList = document.getElementById("citationsList");
+    const citationsSummary = document.getElementById("citationsSummary");
+    const charHint = document.getElementById("charHint");
+    const statusDot = document.getElementById("statusDot");
+    const backendStatus = document.getElementById("backendStatus");
+    const exampleChips = document.getElementById("exampleChips");
+
+    EXAMPLES.forEach((ex) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "example-chip";
+        chip.textContent = ex.label;
+        chip.title = ex.query;
+        chip.addEventListener("click", () => {
+            queryInput.value = ex.query;
+            updateCharHint();
+            queryInput.focus();
         });
-    } catch (e) {
-        console.warn("Running standard browser runtime outside a live Teams client framework envelope.");
+        exampleChips.appendChild(chip);
+    });
+
+    function updateCharHint() {
+        const n = queryInput.value.length;
+        charHint.textContent = `Ctrl+Enter to run · ${n} character${n === 1 ? "" : "s"}`;
+    }
+
+    queryInput.addEventListener("input", updateCharHint);
+    queryInput.addEventListener("keydown", (e) => {
+        if (e.ctrlKey && e.key === "Enter") submitEngineeringTask();
+    });
+    updateCharHint();
+
+    function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function renderMarkdownLite(text) {
+        const escaped = escapeHtml(text);
+        return escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    }
+
+    function setLoading(loading) {
+        submitBtn.disabled = loading;
+        submitBtn.classList.toggle("loading", loading);
+    }
+
+    function intentLabel(intent) {
+        const map = {
+            COMPLIANCE: "Compliance audit",
+            COST: "Cost estimation",
+            RFI: "RFI draft",
+            CHAT: "General / out of scope",
+        };
+        return map[intent] || intent;
+    }
+
+    function complianceStatusLabel(status) {
+        const map = {
+            COMPLIANT_DETERMINED: "Answered from clauses",
+            INSUFFICIENT_DATA: "Insufficient evidence",
+            UNKNOWN: "No clauses retrieved",
+        };
+        return map[status] || "";
+    }
+
+    function complianceBadgeClass(status) {
+        if (status === "COMPLIANT_DETERMINED") return "badge-compliance";
+        if (status === "INSUFFICIENT_DATA") return "badge-insufficient";
+        if (status === "UNKNOWN") return "badge-unknown";
+        return "badge-intent";
+    }
+
+    async function checkBackend() {
+        try {
+            const res = await fetch(`${API_BASE}/api/health`, { method: "GET" });
+            if (res.ok) {
+                statusDot.classList.remove("offline");
+                backendStatus.textContent = "Backend online";
+            } else {
+                throw new Error("unhealthy");
+            }
+        } catch {
+            statusDot.classList.add("offline");
+            backendStatus.textContent = "Backend offline — start Uvicorn on port 8000";
+        }
     }
 
     async function submitEngineeringTask() {
-        const queryText = document.getElementById("queryInput").value.trim();
-        const outputDisplay = document.getElementById("outputDisplay");
-        const metaDisplay = document.getElementById("metaDisplay");
-        const intentTag = document.getElementById("intentTag");
-        const citationCount = document.getElementById("citationCount");
-        const submitBtn = document.getElementById("submitBtn");
+        const queryText = queryInput.value.trim();
+        if (!queryText) {
+            queryInput.focus();
+            return;
+        }
 
-        if (!queryText) return;
-
-        // Visual loading state updates
-        submitBtn.disabled = true;
-        outputDisplay.innerText = "⏳ Orchestrating structural pipelines, matching parameters, extracting items...";
-        metaDisplay.style.display = "none";
+        setLoading(true);
+        outputDisplay.className = "output-content";
+        outputDisplay.innerHTML = "Analyzing your query — routing intent, retrieving standards, and generating a response…";
+        metaBar.hidden = true;
+        sourcesRow.hidden = true;
+        citationsBlock.hidden = true;
+        sourcesRow.innerHTML = "";
+        citationsList.innerHTML = "";
 
         try {
-            // Pointing to our local FastAPI microservice engine endpoint
-            const targetUrl = "http://127.0.0.1:8000/api/invoke";
-            
-            const response = await fetch(targetUrl, {
+            const response = await fetch(`${API_BASE}/api/invoke`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer mock-dev-token" // Passes local bypass checks securely
+                    "Authorization": "Bearer mock-dev-token",
                 },
-                body: JSON.stringify({ query: queryText })
+                body: JSON.stringify({ query: queryText }),
             });
 
             const data = await response.json();
 
-            if (data.success) {
-                outputDisplay.innerText = data.response;
-                intentTag.innerText = data.intent_routed;
-                citationCount.innerText = `Citations Provided: ${data.citations ? data.citations.length : 0}`;
-                metaDisplay.style.display = "flex";
-            } else {
-                outputDisplay.innerText = `❌ App Execution Boundary Issue: ${data.detail || 'Processing Error'}`;
+            if (!response.ok) {
+                const detail = data.detail || response.statusText;
+                outputDisplay.innerHTML = `<div class="error-banner">Request failed (${response.status}): ${escapeHtml(String(detail))}</div>`;
+                return;
             }
 
+            if (data.success) {
+                const text = data.response || "";
+                if (text.trim()) {
+                    outputDisplay.className = "output-content";
+                    outputDisplay.innerHTML = renderMarkdownLite(text);
+                } else {
+                    outputDisplay.className = "output-content empty";
+                    outputDisplay.textContent = "The agent returned an empty response. Check server logs or rephrase your query.";
+                }
+
+                metaBar.hidden = false;
+                intentBadge.textContent = intentLabel(data.intent_routed);
+
+                if (data.intent_routed === "COMPLIANCE" && data.compliance_status) {
+                    complianceBadge.hidden = false;
+                    complianceBadge.textContent = complianceStatusLabel(data.compliance_status);
+                    complianceBadge.className = "badge " + complianceBadgeClass(data.compliance_status);
+                } else {
+                    complianceBadge.hidden = true;
+                }
+
+                const citations = data.citations || [];
+                if (citations.length > 0) {
+                    citationsBlock.hidden = false;
+                    citationsSummary.textContent = `Clause citations (${citations.length})`;
+                    citations.forEach((c) => {
+                        const li = document.createElement("li");
+                        li.textContent = c;
+                        citationsList.appendChild(li);
+                    });
+                }
+
+                const sources = data.sources || [];
+                if (sources.length > 0) {
+                    sourcesRow.hidden = false;
+                    sources.forEach((s) => {
+                        const pill = document.createElement("span");
+                        pill.className = "source-pill";
+                        pill.textContent = s;
+                        sourcesRow.appendChild(pill);
+                    });
+                }
+            } else {
+                outputDisplay.innerHTML = `<div class="error-banner">${escapeHtml(data.detail || "Processing error")}</div>`;
+            }
         } catch (error) {
-            outputDisplay.innerText = `❌ Connection Error: Cannot communicate with the backend microservice. Verify Uvicorn is running on port 8000.\nDetails: ${error.message}`;
+            outputDisplay.innerHTML = `<div class="error-banner">Cannot reach the API at ${escapeHtml(API_BASE)}. Ensure Uvicorn is running and DEBUG_SKIP_AUTH=true in .env.<br><br>${escapeHtml(error.message)}</div>`;
+            statusDot.classList.add("offline");
+            backendStatus.textContent = "Backend offline";
         } finally {
-            submitBtn.disabled = false;
+            setLoading(false);
         }
+    }
+
+    submitBtn.addEventListener("click", submitEngineeringTask);
+    checkBackend();
+
+    try {
+        microsoftTeams.app.initialize().then(() => {
+            microsoftTeams.app.getContext().then((context) => {
+                if (context.app && context.app.theme === "dark") {
+                    document.body.classList.add("theme-dark");
+                }
+            });
+        });
+    } catch {
+        /* running outside Teams */
     }
 </script>
 </body>

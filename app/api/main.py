@@ -113,7 +113,8 @@ def invoke_agent(payload: UserInquiryPayload, token_claims: dict = Depends(verif
             "intent_routed": final_state.get("intent", "UNKNOWN"),
             "response": final_state.get("final_output", ""),
             "citations": final_state.get("citations", []),
-            "sources": final_state.get("sources", [])
+            "sources": final_state.get("sources", []),
+            "compliance_status": final_state.get("compliance_status", ""),
         }
         
     except Exception as e:
