@@ -36,6 +36,23 @@ python scripts/ingest.py
 uvicorn app.api.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
+## Run the frontend (local URL)
+
+This repo’s frontend is a static page in `app/frontend/`, served locally so you get a clickable URL in the terminal.
+
+```bash
+python scripts/run_frontend.py
+```
+
+You should see a link like:
+
+- `http://127.0.0.1:5173/index.html`
+
+Optional:
+
+- Open automatically: `python scripts/run_frontend.py --open`
+- Use a different port: `python scripts/run_frontend.py --port 3000`
+
 Endpoints:
 
 | Method | Path | Auth |
