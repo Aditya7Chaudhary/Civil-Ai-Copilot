@@ -1,0 +1,4 @@
+item_code,description,unit,quantity,unit_rate_inr,total_cost_inr
+CONC-M25,Providing and laying design mix reinforced cement concrete RCC M-25 grade for standard beams suspended structural slabs and footings,cum,150.0,6150.0,922500.0
+FRM-SLAB,Centering and shuttering including steel/plywood lining and continuous propping for suspended horizontal structural slabs,sqm,450.0,410.0,184500.0
+REINF-FE500D,Providing and placing high-ductility TMT Fe 500D steel reinforcement bars optimized for seismic zones under IS 13920 detailing,kg,6200.0,73.5,455700.0

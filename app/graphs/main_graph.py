@@ -1,7 +1,9 @@
 import os
 import json
 import logging
-from typing import TypedDict, List, Dict, Any, Literal
+import secrets
+import csv
+from typing import TypedDict, List, Dict, Any, Literal, Optional
 from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END
 from langchain_groq import ChatGroq
@@ -9,7 +11,8 @@ from langchain_core.prompts import ChatPromptTemplate
 
 # Import all individual functional components built in earlier stages
 from app.tools.compliance_tool import ComplianceEngine
-from app.tools.cost_tool import cost_estimate
+from app.tools.csr_sql import execute_select
+from app.tools.boq_temp_store import normalize_user_id_for_filename, set_latest_csv
 from app.tools.rfi_tool import rfi_draft
 from app.tools.chat_tool import general_chat
 
@@ -20,11 +23,13 @@ logger = logging.getLogger("MainOrchestrator")
 # 1. Define the Unified State Workspace
 class AgentState(TypedDict):
     query: str
+    user_id: str
     intent: str  # 'COMPLIANCE' | 'COST' | 'RFI' | 'CHAT'
     final_output: str
     citations: List[str]
     sources: List[str]
     compliance_status: str  # set only on COMPLIANCE route
+    boq_csv_available: bool
 
 # Initialize Shared System LLM Interface
 shared_llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.0)
@@ -104,58 +109,134 @@ def compliance_execution_node(state: AgentState) -> Dict[str, Any]:
 # NODE 2B: SEMANTIC BOQ COST ESTIMATION ROUTE
 # ==========================================
 def cost_estimation_node(state: AgentState) -> Dict[str, Any]:
-    """Uses LLM to structure text inputs before querying the local CSR database."""
+    """NLP-to-SQL: generate BOQ query as SQL over CSR SQLite table, then write a temp CSV for download."""
     query_text = state["query"]
-    
-    # Semantic extraction prompt to transform natural text into schema JSON structures
-    extractor_prompt = ChatPromptTemplate.from_messages([
-        ("system", (
-            "Extract raw material items and quantities from the engineering text description.\n"
-            "Map item names to exact allowed item codes in the database registry:\n"
-            "- EXC-SOFT, EXC-HARD, EXC-ROCK, BACKFILL-SOIL\n"
-            "- CONC-M10, CONC-M15, CONC-M20, CONC-M25, CONC-M30, CONC-M35, CONC-M40, CONC-M45, CONC-M50\n"
-            "- FRM-FOUND, FRM-COL-RECT, FRM-COL-CIRC, FRM-BEAM, FRM-SLAB, FRM-WALL, FRM-STAIR\n"
-            "- REINF-FE250, REINF-FE415, REINF-FE500, REINF-FE500D, REINF-FE550, REINF-FE600\n"
-            "- PSC-M45, PSC-M50, PSC-M60, PSC-STRAND-127, PSC-ANCHOR-POST, PSC-DUCT-HDPE\n"
-            "- ST-ROLLED-BEAM, ST-ROLLED-CHAN, ST-ROLLED-ANG, ST-BUILTUP-GIRD, ST-BOLT-HSFG, ST-WELD-BUTT\n\n"
-            "Output valid JSON matching this schema: {{\"items\": [{{\"item_code\": \"CODE\", \"quantity\": 0.0}}]}}. "
-            "Output ONLY raw JSON. No markdown enclosures."
-        )),
-        ("user", "{query}")
-    ])
-    
-    messages = extractor_prompt.format_messages(query=query_text)
-    extracted_res = shared_llm.invoke(messages)
-    
+    user_id = (state.get("user_id") or "anonymous").strip() or "anonymous"
+
+    def _extract_sql(text: str) -> str:
+        return (text or "").replace("```sql", "").replace("```", "").strip()
+
+    def _is_safe_select_sql(sql: str) -> Optional[str]:
+        s = (sql or "").strip()
+        if not s:
+            return "empty SQL"
+        # Allow only SELECT / WITH queries, no multiple statements.
+        lowered = s.lower()
+        if ";" in s.strip().rstrip(";"):
+            return "multiple statements are not allowed"
+        if not (lowered.startswith("select") or lowered.startswith("with")):
+            return "only SELECT/WITH queries are allowed"
+        blocked = ["insert", "update", "delete", "drop", "alter", "create", "attach", "detach", "pragma", "vacuum"]
+        if any(f" {kw} " in f" {lowered} " for kw in blocked):
+            return "non-select keyword detected"
+        if "csr_rates" not in lowered:
+            return "query must reference csr_rates"
+        return None
+
+    sql_prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                (
+                    "You are an NLP-to-SQL engine for a BOQ (Bill of Quantities) cost estimate.\n"
+                    "Generate a SINGLE SQLite SELECT query over this table:\n\n"
+                    "Table: csr_rates(item_code TEXT, description TEXT, unit TEXT, rate_inr REAL)\n\n"
+                    "Return columns exactly with these aliases:\n"
+                    "- item_code\n"
+                    "- quantity\n"
+                    "- description\n"
+                    "- unit\n"
+                    "- unit_rate_inr\n"
+                    "- total_cost_inr\n\n"
+                    "Rules:\n"
+                    "- Output ONLY raw SQL (no markdown, no commentary).\n"
+                    "- Use WITH requested(item_code, quantity) AS (VALUES ... ) to encode quantities from the user.\n"
+                    "- LEFT JOIN csr_rates so missing item codes still appear with NULL rates/description/unit.\n"
+                    "- total_cost_inr must be quantity * unit_rate_inr.\n"
+                    "- Do not use any non-SELECT statements.\n"
+                ),
+            ),
+            ("user", "{query}"),
+        ]
+    )
+
+    extracted = shared_llm.invoke(sql_prompt.format_messages(query=query_text))
+    sql = _extract_sql(extracted.content)
+
     try:
-        # Clean potential markdown backticks wrapped around raw structural text streaming responses
-        cleaned_json = extracted_res.content.replace("```json", "").replace("```", "").strip()
-        parsed_payload = json.loads(cleaned_json)
-        
-        # Invoke our functional Python tool over the parsed list payload
-        tool_res = cost_estimate.invoke(parsed_payload)
-        
-        # Format a clean string response for Teams UI display
+        why_unsafe = _is_safe_select_sql(sql)
+        if why_unsafe:
+            raise ValueError(f"Unsafe SQL rejected: {why_unsafe}")
+
+        rows = execute_select(sql)
+
+        calculated = []
+        unresolved = []
+        total = 0.0
+
+        for r in rows:
+            code = (r.get("item_code") or "").strip().upper()
+            qty = float(r.get("quantity") or 0.0)
+            if qty <= 0:
+                continue
+            unit_rate = r.get("unit_rate_inr")
+            if unit_rate is None:
+                unresolved.append({"item_code": code, "quantity": qty, "status": "rate not available"})
+                continue
+
+            unit_rate_f = float(unit_rate)
+            line_total = float(r.get("total_cost_inr") or (unit_rate_f * qty))
+            total += line_total
+            calculated.append(
+                {
+                    "item_code": code,
+                    "description": (r.get("description") or "").strip(),
+                    "unit": (r.get("unit") or "").strip(),
+                    "quantity": qty,
+                    "unit_rate_inr": unit_rate_f,
+                    "total_cost_inr": line_total,
+                }
+            )
+
+        # Write temp CSV and register it for download (also deletes prior temp file for this user)
+        temp_dir = os.path.join("data", "temp", "boq")
+        os.makedirs(temp_dir, exist_ok=True)
+        csv_name = f"boq_{normalize_user_id_for_filename(user_id)}_{secrets.token_hex(8)}.csv"
+        csv_path = os.path.join(temp_dir, csv_name)
+
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(
+                f,
+                fieldnames=["item_code", "description", "unit", "quantity", "unit_rate_inr", "total_cost_inr"],
+            )
+            writer.writeheader()
+            for line in calculated:
+                writer.writerow(line)
+            for miss in unresolved:
+                writer.writerow(
+                    {
+                        "item_code": miss["item_code"],
+                        "description": "",
+                        "unit": "",
+                        "quantity": miss["quantity"],
+                        "unit_rate_inr": "",
+                        "total_cost_inr": "",
+                    }
+                )
+
+        set_latest_csv(user_id=user_id, csv_path=csv_path)
+
         formatted_output = (
-            f"### 📊 Structural Cost Estimation Report\n"
-            f"**Registry Base:** {tool_res['csr_edition_used']}\n"
-            f"**Total Calculated Cost:** INR {tool_res['total_estimated_cost_inr']:,.2f}\n\n"
-            f"#### Line Item Breakdown:\n"
+            "BOQ total\n"
+            f"**Total Calculated Cost:** INR {total:,.2f}\n\n"
+            "PRELIMINARY ESTIMATE DISCLAIMER: This evaluation is generated at a preliminary design stage and carries an expected variance of plus or minus 20%."
         )
-        for line in tool_res["calculated_line_items"]:
-            formatted_output += f"- **{line['item_code']}**: {line['quantity']} {line['unit']} @ ₹{line['unit_rate_inr']}/unit → ₹{line['total_cost_inr']:,.2f}\n"
-            
-        if tool_res["unresolved_items"]:
-            formatted_output += "\n⚠️ **Unresolved Items (Missing CSR Rates):**\n"
-            for broken in tool_res["unresolved_items"]:
-                formatted_output += f"- Code: {broken['item_code']} (Qty: {broken['quantity']})\n"
-                
-        formatted_output += f"\n*{tool_res['disclaimer']}*"
-        
+
+        return {"final_output": formatted_output, "boq_csv_available": True}
+
     except Exception as e:
-        formatted_output = f"❌ Failed to parse itemization arrays semantically. Error: {str(e)}"
-        
-    return {"final_output": formatted_output}
+        formatted_output = f"❌ BOQ SQL processing failed. Error: {str(e)}"
+        return {"final_output": formatted_output, "boq_csv_available": False}
 
 
 # ==========================================

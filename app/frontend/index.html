@@ -279,6 +279,36 @@
             padding-top: 14px;
         }
 
+        .download-row {
+            margin-top: 14px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--border);
+            padding: 9px 14px;
+            font-size: 0.86rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
         .citations-block summary {
             cursor: pointer;
             font-weight: 600;
@@ -415,6 +445,10 @@
                 <span class="badge" id="complianceBadge" hidden></span>
             </div>
             <div class="output-content empty" id="outputDisplay">Ask a question above to start. Try an example prompt for compliance, cost, or RFI workflows.</div>
+            <div class="download-row" id="downloadRow" hidden>
+                <button class="btn-secondary" id="downloadBoqBtn" type="button">Download BOQ CSV</button>
+                <span class="hint" id="downloadHint">CSV is temporary and will be deleted on your next query.</span>
+            </div>
             <div class="sources-row" id="sourcesRow" hidden></div>
             <details class="citations-block" id="citationsBlock" hidden>
                 <summary id="citationsSummary">Clause citations (0)</summary>
@@ -470,6 +504,9 @@
     const statusDot = document.getElementById("statusDot");
     const backendStatus = document.getElementById("backendStatus");
     const exampleChips = document.getElementById("exampleChips");
+    const downloadRow = document.getElementById("downloadRow");
+    const downloadBoqBtn = document.getElementById("downloadBoqBtn");
+    const downloadHint = document.getElementById("downloadHint");
 
     EXAMPLES.forEach((ex) => {
         const chip = document.createElement("button");
@@ -566,6 +603,8 @@
         metaBar.hidden = true;
         sourcesRow.hidden = true;
         citationsBlock.hidden = true;
+        downloadRow.hidden = true;
+        downloadBoqBtn.onclick = null;
         sourcesRow.innerHTML = "";
         citationsList.innerHTML = "";
 
@@ -625,6 +664,39 @@
                         pill.textContent = s;
                         sourcesRow.appendChild(pill);
                     });
+                }
+
+                // BOQ download (only when backend created a temp CSV)
+                const boqDownloadReady = data.intent_routed === "COST" && data.boq_csv_available && data.boq_csv_download_url;
+                if (boqDownloadReady) {
+                    downloadRow.hidden = false;
+                    downloadHint.textContent = "CSV is temporary and will be deleted on your next query.";
+                    downloadBoqBtn.onclick = async () => {
+                        try {
+                            const res = await fetch(`${getApiBase()}${data.boq_csv_download_url}`, {
+                                method: "GET",
+                                headers: { Authorization: getAuthHeaders().Authorization },
+                            });
+                            if (!res.ok) {
+                                const err = await res.json().catch(() => ({}));
+                                throw new Error(err.detail || res.statusText);
+                            }
+                            const blob = await res.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "boq_results.csv";
+                            document.body.appendChild(a);
+                            a.click();
+                            a.remove();
+                            URL.revokeObjectURL(url);
+                        } catch (e) {
+                            outputDisplay.innerHTML = `<div class="error-banner">BOQ download failed: ${escapeHtml(String(e.message || e))}</div>`;
+                        }
+                    };
+                } else {
+                    downloadRow.hidden = true;
+                    downloadBoqBtn.onclick = null;
                 }
             } else {
                 outputDisplay.innerHTML = `<div class="error-banner">${escapeHtml(data.detail || "Processing error")}</div>`;

@@ -9,11 +9,12 @@ import requests
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
 from app.graphs.main_graph import co_pilot_agent
+from app.tools.boq_temp_store import clear_latest_csv, get_latest_csv
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -128,13 +129,17 @@ class UserInquiryPayload(BaseModel):
 
 
 def _format_agent_response(final_state: dict) -> dict:
+    intent = final_state.get("intent", "UNKNOWN")
+    boq_available = intent == "COST" and bool(final_state.get("boq_csv_available", False))
     return {
         "success": True,
-        "intent_routed": final_state.get("intent", "UNKNOWN"),
+        "intent_routed": intent,
         "response": final_state.get("final_output", ""),
         "citations": final_state.get("citations", []),
         "sources": final_state.get("sources", []),
         "compliance_status": final_state.get("compliance_status", ""),
+        "boq_csv_available": boq_available,
+        "boq_csv_download_url": "/api/boq/download" if boq_available else None,
     }
 
 
@@ -180,7 +185,10 @@ async def _run_agent(user_query: str, claims: dict) -> dict:
         claims.get("auth", claims.get("user", "unknown")),
         user_query[:120],
     )
-    initial_state = {"query": user_query}
+    user_id = (claims.get("oid") or claims.get("sub") or claims.get("user") or "anonymous")
+    # Any new query invalidates the previous BOQ download for this user.
+    clear_latest_csv(user_id)
+    initial_state = {"query": user_query, "user_id": user_id}
     final_state = await asyncio.to_thread(co_pilot_agent.invoke, initial_state)
     return _format_agent_response(final_state)
 
@@ -206,3 +214,20 @@ async def invoke_agent(
             status_code=500,
             detail=f"Internal agent engine processing error: {exc}",
         )
+
+
+@app.get("/api/boq/download")
+async def download_latest_boq_csv(token_claims: dict = Depends(verify_request)):
+    """
+    Download the most recent BOQ CSV generated for this authenticated user.
+    The file is overwritten per user (previous temp CSV is deleted when a new BOQ query runs).
+    """
+    user_id = (token_claims.get("oid") or token_claims.get("sub") or token_claims.get("user") or "anonymous")
+    csv_path = get_latest_csv(user_id)
+    if not csv_path or not os.path.exists(csv_path):
+        raise HTTPException(status_code=404, detail="No BOQ CSV is available for download yet.")
+    return FileResponse(
+        csv_path,
+        media_type="text/csv",
+        filename="boq_results.csv",
+    )

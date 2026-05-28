@@ -59,6 +59,7 @@ Endpoints:
 |--------|------|------|
 | GET | `/health`, `/api/health` | None |
 | POST | `/invoke`, `/api/invoke` | Bearer token |
+| GET | `/api/boq/download` | Bearer token |
 
 ### Authentication (no Azure)
 
@@ -92,3 +93,12 @@ python test_api.py
 - `app/api/main.py` — async FastAPI gateway
 - `data/qdrant_storage/` — vector index
 - `data/csr/csr_rates.csv` — CSR 2024 rate table (~82 items)
+- `data/temp/boq/` — temporary BOQ CSV outputs (per user; cleared on next query)
+
+## BOQ download behavior
+
+When a COST/BOQ query runs:
+
+- The backend generates the BOQ result via **NLP → SQL** over a local SQLite copy of `data/csr/csr_rates.csv`.
+- A temporary CSV is created and is available at `GET /api/boq/download`.
+- On the **next query** from the same user (any intent), the previous BOQ CSV is deleted.
